@@ -1,0 +1,40 @@
+name: Profile Stats
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # once a day
+  workflow_dispatch:        # lets you click "Run workflow" manually
+
+permissions:
+  contents: write
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create assets folder
+        run: mkdir -p profile-assets
+
+      - name: Fetch GitHub Stats card
+        run: curl -s "https://github-readme-stats.vercel.app/api?username=shafimughalp-creator&show_icons=true&theme=tokyonight&bg_color=0D1117&title_color=A78BFA&icon_color=7C3AED&text_color=E9E4FF&border_color=4C1D95" -o profile-assets/github-stats.svg
+
+      - name: Fetch Top Languages card
+        run: curl -s "https://github-readme-stats.vercel.app/api/top-langs/?username=shafimughalp-creator&layout=compact&theme=tokyonight&bg_color=0D1117&title_color=A78BFA&text_color=E9E4FF&border_color=4C1D95" -o profile-assets/top-langs.svg
+
+      - name: Fetch Streak Stats card
+        run: curl -s "https://streak-stats.demolab.com/?user=shafimughalp-creator&theme=tokyonight&background=0D1117&ring=7C3AED&fire=A78BFA&currStreakLabel=A78BFA&border=4C1D95" -o profile-assets/streak-stats.svg
+
+      - name: Fetch Trophies
+        run: curl -s "https://github-profile-trophy.vercel.app/?username=shafimughalp-creator&theme=algolia&no-frame=true&column=7&margin-w=8&margin-h=8" -o profile-assets/trophies.svg
+
+      - name: Fetch Activity Graph
+        run: curl -s "https://github-readme-activity-graph.vercel.app/graph?username=shafimughalp-creator&theme=tokyo-night&area=true&hide_border=true" -o profile-assets/activity-graph.svg
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add profile-assets
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update profile stats" && git push)
