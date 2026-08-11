@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="SQL_DAY_38.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1228"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="match_stats" custom_title="0" dock_id="1" table="4,11:mainmatch_stats"/><dock_state state="000000ff00000000fd000000010000000200000435000002d7fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000004350000011100ffffff000002870000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="match_stats" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="56"/><column index="2" value="69"/><column index="3" value="71"/><column index="4" value="48"/><column index="5" value="55"/><column index="6" value="107"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">-- Drop tables if they already exist (child table first, then parent)
+DROP TABLE IF EXISTS match_stats;
+DROP TABLE IF EXISTS players;
+
+-- Create the players table
+CREATE TABLE players (
+    player_id INTEGER PRIMARY KEY,
+    name TEXT,
+    position TEXT
+);
+
+-- Create the match_stats table
+CREATE TABLE match_stats (
+    stat_id INTEGER PRIMARY KEY,
+    match_id INTEGER,
+    player_id INTEGER,
+    goals INTEGER,
+    assists INTEGER,
+    minutes_played INTEGER,
+    FOREIGN KEY(player_id) REFERENCES players(player_id)
+);
+
+-- Insert our starting lineup
+INSERT INTO players (player_id, name, position) VALUES 
+(1, 'Tariq', 'Striker'),
+(2, 'Shafi', 'Left Winger'),
+(3, 'Ahmed', 'Midfielder');
+
+-- Insert some match data
+INSERT INTO match_stats (stat_id, match_id, player_id, goals, assists, minutes_played) VALUES 
+(1, 101, 2, 1, 1, 90),
+(2, 102, 2, 0, 2, 85),
+(3, 103, 2, 2, 0, 75),
+(4, 101, 1, 2, 0, 90),
+(5, 102, 1, 1, 0, 90);
+
+SELECT 
+    COUNT(*) AS total_rows,         -- counts every row in the table, aliased
+    SUM(goals) AS total_goals,      -- adds up all the values in the goals column
+    AVG(assists) AS avg_assists     -- calculates the average of the assists column
+FROM match_stats;                   -- source table (runs first, logically)
+
+--- Using the match_stats table, write a single query that returns:
+
+--- The maximum (MAX) minutes played in a single match.
+
+--- The minimum (MIN) minutes played in a single match.
+
+--- The total (SUM) of all assists across all matches.
+
+SELECT 
+     max(minutes_played) AS MAX_MINUTES ,
+	 min(minutes_played) AS MIN_MINUTES ,
+	 sum(assists) AS TOTAL_ASSISTS 
+FROM match_stats ;	 
+
+SELECT 
+    player_id,                      -- The column we are grouping by
+    SUM(goals) AS total_goals       -- The aggregate function applied to each group
+FROM match_stats                    -- The source table
+GROUP BY player_id;                 -- Splits the data into buckets per player
+
+
+SELECT 
+    player_id,                               -- Column we are grouping by
+    SUM(goals) AS total_goals                -- Aggregate for the group
+FROM match_stats                             -- Source table
+WHERE minutes_played = 90                    -- Filters raw rows FIRST (drops the 85 min and 75 min games)
+GROUP BY player_id;                          -- Groups the remaining rows
+
+--- Let's test this combination. Using the match_stats table, write a single query that returns:
+
+--- The player_id.
+
+--- The total number of matches they played (COUNT).
+
+--- The total assists they provided (SUM).
+
+SELECT
+    player_id ,
+	count(match_id) AS TOTAL_MATCHES ,
+	sum(assists) AS ASSISTS_PROVIDED
+FROM match_stats
+WHERE goals &gt;= 1 
+GROUP BY player_id ;  
+
+
+SELECT 
+    player_id,                      -- Grouping column
+    SUM(goals) AS total_goals       -- Aggregate math
+FROM match_stats                    -- Source table (runs 1st)
+GROUP BY player_id                  -- Groups the rows (runs 2nd)
+HAVING SUM(goals) &gt; 2;              -- Filters the grouped results (runs 3rd)
+
+--- Let's combine these concepts into a single query. Using the match_stats table, write a query that returns:
+
+--- The player_id.
+
+--- Their total assists (SUM).
+
+--- The catch: The manager only wants to see this data for players who have played more than 2 matches in total (COUNT).
+
+SELECT 
+     player_id ,
+	 sum(assists) AS TOTAL_ASSISTS 
+FROM match_stats
+GROUP BY player_id
+HAVING count(match_id) &gt; 2 ;	 
+
+SELECT 
+    player_id, 
+    SUM(minutes_played) AS total_minutes
+FROM match_stats
+GROUP BY player_id 
+HAVING SUM(minutes_played) &gt; 100 ;
+
+
+SELECT 
+    player_id, 
+    SUM(goals) AS total_goals       -- 3. calculate the sum for each bucket
+FROM match_stats                    -- 1. pull from the source table
+GROUP BY player_id                  -- 2. group into player buckets
+ORDER BY total_goals DESC;          -- 4. sort the final grouped results highest to lowest
+
+
+--- Using the match_stats table, return the player_id and their average minutes played (AVG).
+---  Sort the results so the player with the highest average is at the very top, and use LIMIT to show only that #1 player.
+ 
+SELECT 
+    player_id, 
+    AVG(minutes_played) AS AVERAGE_MIN  -- 3. Calculate the average for each bucket
+FROM match_stats                        -- 1. Pull from the source table
+GROUP BY player_id                      -- 2. Group into individual player buckets 
+ORDER BY AVERAGE_MIN DESC               -- 4. Sort the final grouped results highest to lowest
+LIMIT 1;                                -- 5. Keep only the top row (no equals sign)
+
+
+SELECT
+     player_id ,
+	 SUM(assists) AS TOTAL_ASSITS 
+FROM match_stats
+WHERE minutes_played &gt;= 45 
+GROUP BY player_id
+HAVING sum(assists) &gt;= 2 ; 
+	 
+--- Using the match_stats table, return the player_id and their total goals (SUM).
+
+--- Filter out any matches where they played 60 minutes or less.
+
+--- Group the remaining data by player.
+
+--- Filter the final grouped results to only show players with more than 1 total goal.
+
+--- Sort the final leaderboard so the player with the most goals is at the top.	 
+
+SELECT 
+    player_id ,
+	SUM(goals) AS TOTAL_GOALS 
+FROM match_stats
+WHERE minutes_played &gt;= 60 
+GROUP BY player_id
+HAVING sum(goals) &gt; 1 
+ORDER BY TOTAL_GOALS DESC ; 	
+
+--- Using the match_stats table, generate a report that returns:
+
+--- The player_id.
+
+--- Their total matches played (COUNT).
+
+--- Their total goals scored (SUM).
+
+--- Their average minutes played across those matches (AVG).
+
+SELECT 
+   player_id ,
+   count(match_id) AS MATCHES_PLAYED ,
+   SUM(goals) AS GOALS_SCORED ,
+   AVG(minutes_played) AS TOTAL_MINUTES 
+FROM match_stats
+
+--- Before calculating anything: Exclude any &quot;ghost&quot; appearances. Only include matches where the player was on the pitch for more than 10 minutes (WHERE).
+
+--- Group the data: Group the remaining valid matches by player (GROUP BY).
+
+--- After grouping: The director only wants to see players whose average minutes played is greater than 45 (HAVING).
+
+--- Formatting the report: Sort the final list so the player with the highest total goals is at the top (ORDER BY).
+
+--- The Cutoff: The director only wants to see the top 2 players on this list (LIMIT).   
+
+WHERE minutes_played &gt; 10 
+
+GROUP BY player_id 
+
+HAVING TOTAL_MINUTES &gt; 45 
+
+ORDER BY GOALS_SCORED DESC 
+
+LIMIT 2 ;</sql><current_tab id="0"/></tab_sql></sqlb_project>
