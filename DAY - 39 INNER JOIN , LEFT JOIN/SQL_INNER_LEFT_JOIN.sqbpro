@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="SQL_INNER_LEFT_JOIN.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="0"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1515"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="products" custom_title="0" dock_id="1" table="4,8:mainproducts"/><dock_state state="000000ff00000000fd000000010000000200000435000002d7fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000004350000011100ffffff000002870000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="customers" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="87"/><column index="2" value="140"/><column index="3" value="70"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="orders" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="65"/><column index="2" value="88"/><column index="3" value="80"/><column index="4" value="85"/><column index="5" value="65"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="products" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="79"/><column index="2" value="187"/><column index="3" value="54"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">
+-- 0. Drop tables if they already exist (Child first, then parents)
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS products;
+
+-- 1. Create the Customers Table
+CREATE TABLE customers (
+    customer_id INTEGER PRIMARY KEY,
+    name TEXT,
+    city TEXT
+);
+
+-- 2. Create the Products Table
+CREATE TABLE products (
+    product_id INTEGER PRIMARY KEY,
+    product_name TEXT,
+    price REAL
+);
+
+-- 3. Create the Orders Table (Contains Foreign Keys)
+CREATE TABLE orders (
+    order_id INTEGER PRIMARY KEY,
+    customer_id INTEGER,
+    product_id INTEGER,
+    order_date TEXT,
+    quantity INTEGER,
+    FOREIGN KEY(customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY(product_id) REFERENCES products(product_id)
+);
+
+-- Insert Data: Customers
+INSERT INTO customers (name, city) VALUES 
+('Peter Parker', 'New York'),
+('Miles Morales', 'Brooklyn'),
+('Bruce Wayne', 'Gotham'),
+('Lionel Messi', 'Miami'),
+('Cristiano Ronaldo', 'Riyadh');
+
+-- Insert Data: Products
+INSERT INTO products (product_name, price) VALUES 
+('Web Shooters Pro', 149.99),
+('Batmobile Tyres', 450.00),
+('Predator Football Boots', 220.00),
+('Spider-Suit V2', 999.00),
+('FIFA World Cup Replica', 120.00);
+
+-- Insert Data: Orders 
+INSERT INTO orders (customer_id, product_id, order_date, quantity) VALUES 
+(1, 1, '2026-08-10', 2),
+(2, 4, '2026-08-11', 1),
+(3, 2, '2026-08-12', 4),
+(4, 3, '2026-08-12', 2),
+(1, 4, '2026-08-13', 1);
+
+SELECT c.name, c.city, o.order_date     -- columns to return, using aliases to specify which table they come from
+FROM customers c                        -- left table, temporarily renamed to 'c' (alias)
+INNER JOIN orders o                     -- right table, temporarily renamed to 'o', keeping ONLY matching rows
+ON c.customer_id = o.customer_id;       -- the key condition that links them together (Primary Key = Foreign Key)
+
+SELECT c.name, o.quantity               -- selecting name from customers, quantity from orders
+FROM customers c                        -- base table
+INNER JOIN orders o                     -- joining orders
+ON c.customer_id = o.customer_id        -- linking condition
+WHERE c.city = 'New York'               -- filtering rows AFTER the join happens
+ORDER BY o.quantity DESC;               -- sorting the final result
+
+-- Scenario: We need to know the details of the products that were actually sold.
+-- Task: Write an INNER JOIN to connect the orders table and the products table.
+
+-- Select the order_date and quantity from the orders table.
+
+-- Select the product_name and price from the products table.
+
+SELECT o.order_date , o.quantity , p.product_name , p.price 
+FROM orders o
+INNER JOIN products p 
+ON o.product_id = p.product_id ;
+
+
+SELECT c.name, o.order_date        -- columns to return
+FROM customers c                   -- the LEFT table (keeps EVERY row from this table)
+LEFT JOIN orders o                 -- the RIGHT table (only brings in matching rows)
+ON c.customer_id = o.customer_id;  -- the key condition linking them
+
+SELECT c.name                           -- selecting just the customer's name
+FROM customers c                        -- base table (Left)
+LEFT JOIN orders o                      -- joining orders (Right)
+ON c.customer_id = o.customer_id        -- linking condition
+WHERE o.order_id IS NULL;               -- filtering to KEEP ONLY the rows where no order exists
+
+-- Write a LEFT JOIN starting with the products table (making it your left table) and join it to the orders table.
+
+-- Select the product_name.
+
+-- Filter the results using a WHERE clause so it only shows the product that has never been ordered (using IS NULL).
+
+SELECT p.product_id , p.product_name
+FROM products p 
+LEFT JOIN orders o 
+ON p.product_id = o.product_id
+WHERE o.order_id IS NULL ;
+
+SELECT c.name, p.product_name, o.quantity   -- Selecting columns from all 3 tables
+FROM customers c                            -- Base table (1)
+INNER JOIN orders o                         -- Joining the bridge table (2)
+ON c.customer_id = o.customer_id            -- Link between customers and orders
+INNER JOIN products p                       -- Joining the final table (3)
+ON o.product_id = p.product_id;             -- Link between orders and products
+
+
+SELECT c.name, SUM(p.price * o.quantity) AS total_spent  -- Multiplying price by quantity, summing it up, and aliasing
+FROM customers c                                         -- Base table
+INNER JOIN orders o ON c.customer_id = o.customer_id     -- Bridge to orders
+INNER JOIN products p ON o.product_id = p.product_id     -- Bridge to products
+GROUP BY c.name                                          -- Collapsing the rows per customer
+ORDER BY total_spent DESC;                               -- Sorting by who spent the most
+
+--- INNER JOIN query to find out which cities ordered the &quot;Spider-Suit V2&quot;.
+
+--- Select the city from the customers table, the order_date from the orders table, and the product_name from the products table.
+
+--- Join all three tables together.
+
+--- Filter the final result using a WHERE clause so it only shows rows where the product_name is exactly
+SELECT c.city , o.order_id , p.product_name
+FROM customers c 
+INNER JOIN orders o ON c.customer_id = o.customer_id
+INNER JOIN products p ON o.product_id = p.product_id
+WHERE p.product_name = &quot;Spider-Suit V2&quot;;
+
+
+SELECT c.name, c.customer_id, o.order_date
+FROM customers c
+INNER JOIN orders o ON c.customer_id = o.customer_id;
+
+
+SELECT p.product_name
+FROM products p
+LEFT JOIN orders o ON p.product_id = o.product_id
+WHERE o.order_id IS NULL;
+
+--- Task: Write a query to find all orders placed by customers living in 'Gotham'.
+
+--- Requirements: Return the customer's name and the quantity ordered. Use an INNER JOIN
+
+SELECT c.name , o.quantity
+FROM customers c
+INNER JOIN orders o 
+ON c.customer_id = o.customer_id
+WHERE c.city = 'Gotham' ;
+
+-- Task: The warehouse manager wants a complete list of all products, along with the date they were ordered. 
+---If a product hasn't been ordered, the date should just say NULL.
+
+-- Requirements: Return product_name and order_date. Use a LEFT JOIN starting with the products table.
+SELECT p.product_name , o.order_date
+FROM products p 
+LEFT JOIN orders o 
+ON p.product_id = o.product_id ;
+
+--- Task: We need to know who bought the 'Batmobile Tyres' and how much they cost in total (price).
+
+--- Requirements: Write a 3-table INNER JOIN (customers → orders → products).
+--- Return the customer's name, the product_name, and the product's price.
+--- Filter the query so it only returns rows for 'Batmobile Tyres'.
+
+SELECT c.name, p.product_name, p.price
+FROM customers c                             -- Start your chain here!
+INNER JOIN orders o ON c.customer_id = o.customer_id
+INNER JOIN products p ON p.product_id = o.product_id
+WHERE p.product_name = 'Batmobile Tyres';    -- Single quotes for SQL strings
+
+
+--- Write a single query that calculates the total amount spent by each customer.
+
+--- Write a 3-table INNER JOIN to connect customers, orders, and products.
+
+--- Select the customer's name.
+
+--- Calculate the total spent by multiplying the product's price by the order quantity, and sum it all up: SUM(p.price * o.quantity).
+---  Alias this calculation as total_spent.
+
+--- Use GROUP BY to collapse the rows so you only see one row per customer name.
+
+SELECT c.name , SUM(p.price * o.quantity) AS total_spent 
+FROM customers c 
+INNER JOIN orders o ON c.customer_id = o.customer_id
+INNER JOIN products p ON p.product_id = o.product_id
+GROUP BY c.name 
+ORDER BY total_spent DESC ;</sql><current_tab id="0"/></tab_sql></sqlb_project>
