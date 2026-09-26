@@ -1,0 +1,13 @@
+match_id,shots,home,won
+1,High,Yes,Win
+2,High,Yes,Win
+3,High,No,Win
+4,High,No,Loss
+5,High,Yes,Win
+6,High,No,Win
+7,Low,Yes,Win
+8,Low,Yes,Loss
+9,Low,No,Loss
+10,Low,No,Loss
+11,Low,No,Loss
+12,Low,Yes,Loss
