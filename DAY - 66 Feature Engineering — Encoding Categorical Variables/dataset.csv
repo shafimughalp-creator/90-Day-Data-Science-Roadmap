@@ -1,0 +1,21 @@
+player_id,position,preferred_foot,fitness_level,league,goals,market_value_m
+1,Forward,Right,high,Premier,18,42.5
+2,Midfielder,Left,medium,La Liga,6,25.0
+3,Defender,Right,low,Serie A,1,12.0
+4,Goalkeeper,Right,medium,Bundesliga,0,18.5
+5,Forward,Left,high,La Liga,22,55.0
+6,Midfielder,Right,high,Premier,9,38.0
+7,Defender,Left,medium,Bundesliga,2,15.5
+8,Forward,Right,medium,Serie A,14,30.0
+9,Midfielder,Right,low,Premier,4,14.0
+10,Defender,Right,high,La Liga,3,20.0
+11,Goalkeeper,Left,high,Serie A,0,22.0
+12,Forward,Left,low,Bundesliga,7,16.5
+13,Midfielder,Left,high,La Liga,11,40.0
+14,Defender,Right,medium,Premier,2,19.0
+15,Forward,Right,high,Bundesliga,20,48.0
+16,Midfielder,Right,medium,Serie A,5,21.0
+17,Defender,Left,low,La Liga,1,10.5
+18,Goalkeeper,Right,low,Premier,0,11.0
+19,Forward,Left,medium,Premier,12,33.0
+20,Midfielder,Left,low,Bundesliga,3,13.0
